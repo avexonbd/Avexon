@@ -267,23 +267,40 @@ const defaultWhyChooseUsItems = [
   }
 ];
 
+const safeGetLocalStorage = <T,>(key: string, defaultValue: T): T => {
+  if (typeof window !== "undefined" && window.localStorage) {
+    try {
+      const stored = window.localStorage.getItem(key);
+      if (stored) {
+        if (typeof defaultValue === "string" && !stored.startsWith("{") && !stored.startsWith("[")) {
+          return stored as unknown as T;
+        }
+        return JSON.parse(stored) as T;
+      }
+    } catch (e) {
+      console.warn("Error reading from localStorage:", e);
+    }
+  }
+  return defaultValue;
+};
+
 export function ContentProvider({ children }: { children: React.ReactNode }) {
-  const [hero, setHeroConfig] = useState<HeroConfig>(defaultHero);
-  const [owner, setOwner] = useState<OwnerConfig>(defaultOwner);
-  const [services, setServices] = useState<Service[]>(SERVICES);
-  const [websites, setWebsites] = useState<WebsiteProduct[]>(WEBSITES);
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>(PORTFOLIO);
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(TESTIMONIALS);
-  const [team, setTeam] = useState<TeamMember[]>(TEAM);
-  const [logoUrl, setLogoUrl] = useState<string>("https://www.image2url.com/r2/default/images/1780210596854-d50e17fe-f288-45b0-8d70-5a0cb736b9be.jpeg");
-  const [headerBranding, setHeaderBranding] = useState<HeaderBrandingConfig>(defaultHeaderBranding);
-  const [noticeConfig, setNoticeConfig] = useState<NoticeConfig>(defaultNoticeConfig);
-  const [offerConfig, setOfferConfig] = useState<OfferConfig>(defaultOfferConfig);
-  const [contactConfig, setContactConfig] = useState<ContactConfig>(defaultContact);
-  const [sectionHeadings, setSectionHeadings] = useState<SectionHeadingsConfig>(defaultSectionHeadings);
-  const [customPackagePlans, setCustomPackagePlans] = useState<Record<string, PackagePlan[]> | undefined>(undefined);
-  const [whyChooseUsStats, setWhyChooseUsStats] = useState<any[]>(defaultWhyChooseUsStats);
-  const [whyChooseUsItems, setWhyChooseUsItems] = useState<any[]>(defaultWhyChooseUsItems);
+  const [hero, setHeroConfig] = useState<HeroConfig>(() => safeGetLocalStorage("avx_c_hero", defaultHero));
+  const [owner, setOwner] = useState<OwnerConfig>(() => safeGetLocalStorage("avx_c_owner", defaultOwner));
+  const [services, setServices] = useState<Service[]>(() => safeGetLocalStorage("avx_c_services", SERVICES));
+  const [websites, setWebsites] = useState<WebsiteProduct[]>(() => safeGetLocalStorage("avx_c_websites", WEBSITES));
+  const [portfolio, setPortfolio] = useState<PortfolioItem[]>(() => safeGetLocalStorage("avx_c_portfolio", PORTFOLIO));
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(() => safeGetLocalStorage("avx_c_testimonials", TESTIMONIALS));
+  const [team, setTeam] = useState<TeamMember[]>(() => safeGetLocalStorage("avx_c_team", TEAM));
+  const [logoUrl, setLogoUrl] = useState<string>(() => safeGetLocalStorage("avx_c_logo", "https://www.image2url.com/r2/default/images/1780210596854-d50e17fe-f288-45b0-8d70-5a0cb736b9be.jpeg"));
+  const [headerBranding, setHeaderBranding] = useState<HeaderBrandingConfig>(() => safeGetLocalStorage("avx_c_header_branding", defaultHeaderBranding));
+  const [noticeConfig, setNoticeConfig] = useState<NoticeConfig>(() => safeGetLocalStorage("avx_c_notice", defaultNoticeConfig));
+  const [offerConfig, setOfferConfig] = useState<OfferConfig>(() => safeGetLocalStorage("avx_c_offer", defaultOfferConfig));
+  const [contactConfig, setContactConfig] = useState<ContactConfig>(() => safeGetLocalStorage("avx_c_contact", defaultContact));
+  const [sectionHeadings, setSectionHeadings] = useState<SectionHeadingsConfig>(() => safeGetLocalStorage("avx_c_headings", defaultSectionHeadings));
+  const [customPackagePlans, setCustomPackagePlans] = useState<Record<string, PackagePlan[]> | undefined>(() => safeGetLocalStorage("avx_c_package_plans", undefined));
+  const [whyChooseUsStats, setWhyChooseUsStats] = useState<any[]>(() => safeGetLocalStorage("avx_c_why_choose_us_stats", defaultWhyChooseUsStats));
+  const [whyChooseUsItems, setWhyChooseUsItems] = useState<any[]>(() => safeGetLocalStorage("avx_c_why_choose_us_items", defaultWhyChooseUsItems));
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Load from Supabase (or fallback local JSON DB) with localStorage as offline fallback
@@ -442,9 +459,38 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
         console.warn("Failed to load initial state, falling back to local storage: ", e);
         try {
           const storedHero = localStorage.getItem("avx_c_hero");
-          if (storedHero) setHeroConfig(JSON.parse(storedHero));
+          const storedOwner = localStorage.getItem("avx_c_owner");
+          const storedServices = localStorage.getItem("avx_c_services");
+          const storedWebsites = localStorage.getItem("avx_c_websites");
+          const storedPortfolio = localStorage.getItem("avx_c_portfolio");
+          const storedTestimonials = localStorage.getItem("avx_c_testimonials");
+          const storedTeam = localStorage.getItem("avx_c_team");
+          const storedLogo = localStorage.getItem("avx_c_logo");
+          const storedBranding = localStorage.getItem("avx_c_header_branding");
+          const storedNotice = localStorage.getItem("avx_c_notice");
+          const storedOffer = localStorage.getItem("avx_c_offer");
+          const storedContact = localStorage.getItem("avx_c_contact");
           const storedHeadings = localStorage.getItem("avx_c_headings");
+          const storedPackagePlans = localStorage.getItem("avx_c_package_plans");
+          const storedWhyChooseUsStats = localStorage.getItem("avx_c_why_choose_us_stats");
+          const storedWhyChooseUsItems = localStorage.getItem("avx_c_why_choose_us_items");
+
+          if (storedHero) setHeroConfig(JSON.parse(storedHero));
+          if (storedOwner) setOwner(JSON.parse(storedOwner));
+          if (storedServices) setServices(JSON.parse(storedServices));
+          if (storedWebsites) setWebsites(JSON.parse(storedWebsites));
+          if (storedPortfolio) setPortfolio(JSON.parse(storedPortfolio));
+          if (storedTestimonials) setTestimonials(JSON.parse(storedTestimonials));
+          if (storedTeam) setTeam(JSON.parse(storedTeam));
+          if (storedLogo) setLogoUrl(storedLogo);
+          if (storedBranding) setHeaderBranding(JSON.parse(storedBranding));
+          if (storedNotice) setNoticeConfig(JSON.parse(storedNotice));
+          if (storedOffer) setOfferConfig(JSON.parse(storedOffer));
+          if (storedContact) setContactConfig(JSON.parse(storedContact));
           if (storedHeadings) setSectionHeadings(JSON.parse(storedHeadings));
+          if (storedPackagePlans) setCustomPackagePlans(JSON.parse(storedPackagePlans));
+          if (storedWhyChooseUsStats) setWhyChooseUsStats(JSON.parse(storedWhyChooseUsStats));
+          if (storedWhyChooseUsItems) setWhyChooseUsItems(JSON.parse(storedWhyChooseUsItems));
         } catch (subErr) {}
       } finally {
         setIsLoading(false);

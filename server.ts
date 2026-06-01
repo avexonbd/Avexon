@@ -342,6 +342,25 @@ app.post("/api/content", (req, res) => {
   }
 });
 
+// Path to write manual Supabase configs in development and bundle time
+const SUPABASE_CONFIG_FILE = path.join(process.cwd(), "src", "supabase_config.json");
+
+// API to save manual Supabase credentials to src/supabase_config.json
+app.post("/api/supabase-config", (req, res) => {
+  try {
+    const { url, anonKey } = req.body;
+    const config = {
+      VITE_SUPABASE_URL: url || "",
+      VITE_SUPABASE_ANON_KEY: anonKey || ""
+    };
+    fs.writeFileSync(SUPABASE_CONFIG_FILE, JSON.stringify(config, null, 2), "utf-8");
+    res.json({ success: true, message: "Supabase config written to workspace successfully!" });
+  } catch (err: any) {
+    console.error("Error writing supabase config:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // API to get all customer orders
 app.get("/api/orders", (req, res) => {
   try {

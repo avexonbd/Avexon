@@ -407,24 +407,52 @@ export default function AdminPanel({ isOpen, onClose, isStandalonePWA = false }:
   const [manualSupabaseUrl, setManualSupabaseUrl] = useState<string>(() => localStorage.getItem("VITE_SUPABASE_URL") || "");
   const [manualSupabaseKey, setManualSupabaseKey] = useState<string>(() => localStorage.getItem("VITE_SUPABASE_ANON_KEY") || "");
 
-  const handleSaveManualSupabase = () => {
+  const handleSaveManualSupabase = async () => {
     if (!manualSupabaseUrl.trim() || !manualSupabaseKey.trim()) {
       alert("ইনপুট খালি রাখা যাবে না! দয়া করে দুটি ইনপুটই সঠিকভাবে পূরণ করুন।");
       return;
     }
     localStorage.setItem("VITE_SUPABASE_URL", manualSupabaseUrl.trim());
     localStorage.setItem("VITE_SUPABASE_ANON_KEY", manualSupabaseKey.trim());
+
+    try {
+      await fetch("/api/supabase-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: manualSupabaseUrl.trim(),
+          anonKey: manualSupabaseKey.trim()
+        })
+      });
+    } catch (e) {
+      console.warn("Could not write Supabase config to server filesystem:", e);
+    }
+
     triggerSuccessAlert("সুপাবেস সংযোগ কি সফলভাবে সেভ করা হয়েছে! ৫ সেকেন্ডের মধ্যে পেজ রিলোড হবে...");
     setTimeout(() => {
       window.location.reload();
     }, 1500);
   };
 
-  const handleResetManualSupabase = () => {
+  const handleResetManualSupabase = async () => {
     localStorage.removeItem("VITE_SUPABASE_URL");
     localStorage.removeItem("VITE_SUPABASE_ANON_KEY");
     setManualSupabaseUrl("");
     setManualSupabaseKey("");
+
+    try {
+      await fetch("/api/supabase-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: "",
+          anonKey: ""
+        })
+      });
+    } catch (e) {
+      console.warn("Could not reset Supabase config on server filesystem:", e);
+    }
+
     triggerSuccessAlert("ম্যানুয়াল সুপাবেস কি মুছে ফেলা হয়েছে এবং ডিফল্ট সেটিংস সচল করা হয়েছে!");
     setTimeout(() => {
       window.location.reload();
